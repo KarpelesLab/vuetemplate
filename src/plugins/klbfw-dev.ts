@@ -1,6 +1,7 @@
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import type { Plugin } from 'vite';
+import type { IncomingMessage, ServerResponse } from 'http';
 
 interface RegistryConfig {
   [key: string]: string;
@@ -106,11 +107,72 @@ export function klbfwDev(): Plugin {
     apply: 'serve', // Only apply in dev mode
 
     configureServer(server) {
-      // Use middleware to capture the request URL
-      server.middlewares.use((req, _res, next) => {
-        // Store the URL on the request for later use
-        (req as Record<string, unknown>).__originalUrl = req.url;
-        next();
+      // API proxy middleware for /_special/rest/ and /_rest/
+      server.middlewares.use(async (req: IncomingMessage, res: ServerResponse, next: () => void) => {
+        const url = req.url || '';
+
+        // Check if this is an API request
+        if (!url.startsWith('/_special/rest/') && !url.startsWith('/_rest/')) {
+          return next();
+        }
+
+        // Normalize path: /_rest/ -> /_special/rest/
+        const apiPath = url.startsWith('/_rest/')
+          ? '/_special/rest/' + url.substring('/_rest/'.length)
+          : url;
+
+        const targetUrl = `https://ws.atonline.com${apiPath}`;
+
+        try {
+          // Collect request body
+          const bodyChunks: Buffer[] = [];
+          for await (const chunk of req) {
+            bodyChunks.push(chunk as Buffer);
+          }
+          const body = Buffer.concat(bodyChunks);
+
+          // Build headers for proxy request
+          const headers: Record<string, string> = {};
+          for (const [key, value] of Object.entries(req.headers)) {
+            if (value && key.toLowerCase() !== 'host' && key.toLowerCase() !== 'connection') {
+              headers[key] = Array.isArray(value) ? value.join(', ') : value;
+            }
+          }
+
+          // Check for CSRF token validation
+          const authHeader = req.headers['authorization'];
+          if (authHeader && typeof authHeader === 'string') {
+            const match = authHeader.match(/^Session\s+(.+)$/i);
+            if (match && match[1] === token) {
+              headers['Sec-Csrf-Token'] = 'valid';
+            }
+          }
+
+          // Make proxy request
+          const proxyResponse = await fetch(targetUrl, {
+            method: req.method || 'GET',
+            headers: headers,
+            body: body.length > 0 ? body : undefined,
+          });
+
+          // Forward response status and headers
+          res.statusCode = proxyResponse.status;
+          for (const [key, value] of proxyResponse.headers.entries()) {
+            // Skip headers that shouldn't be forwarded
+            if (key.toLowerCase() !== 'transfer-encoding' && key.toLowerCase() !== 'connection') {
+              res.setHeader(key, value);
+            }
+          }
+
+          // Forward response body
+          const responseBody = await proxyResponse.arrayBuffer();
+          res.end(Buffer.from(responseBody));
+
+        } catch (error) {
+          console.error('[klbfw-dev] Proxy error:', error);
+          res.statusCode = 502;
+          res.end(JSON.stringify({ error: 'Proxy error', message: String(error) }));
+        }
       });
     },
 
