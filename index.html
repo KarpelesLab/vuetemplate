@@ -4,7 +4,86 @@
     <meta charset="UTF-8">
     <link rel="icon" href="/favicon.ico">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="app-version" content="%GIT_VERSION%">
     <title>Vite App</title>
+    <script>
+      // Register service worker with version information
+      if ('serviceWorker' in navigator) {
+        // Get version from meta tag
+        const versionMeta = document.querySelector('meta[name="app-version"]');
+        const version = versionMeta ? versionMeta.getAttribute('content') : '%GIT_VERSION%';
+        console.log('Page loaded with version:', version);
+
+        // Check for existing service worker controller first
+        if (navigator.serviceWorker.controller) {
+          console.log('Found existing service worker controller');
+          // Send version to existing controller
+          navigator.serviceWorker.controller.postMessage({
+            type: 'SET_VERSION',
+            version: version
+          });
+        }
+
+        // Register the service worker
+        navigator.serviceWorker.register('/service-worker.js')
+          .then(registration => {
+            console.log('Service worker registered');
+
+            // If there's already an active service worker
+            if (registration.active) {
+              console.log('Active service worker found, sending version');
+              registration.active.postMessage({
+                type: 'SET_VERSION',
+                version: version
+              });
+            }
+
+            // Handle waiting service worker
+            if (registration.waiting) {
+              console.log('Waiting service worker found, sending version');
+              registration.waiting.postMessage({
+                type: 'SET_VERSION',
+                version: version
+              });
+            }
+
+            // Handle future installations
+            registration.onupdatefound = () => {
+              const installing = registration.installing;
+              console.log('New service worker installing');
+
+              if (installing) {
+                installing.onstatechange = () => {
+                  console.log('Service worker state changed:', installing.state);
+
+                  if (installing.state === 'activated') {
+                    console.log('Service worker activated, sending version');
+                    installing.postMessage({
+                      type: 'SET_VERSION',
+                      version: version
+                    });
+                  }
+                };
+              }
+            };
+          })
+          .catch(error => {
+            console.error('Service worker registration failed:', error);
+          });
+
+        // Listen for controlled change events
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          console.log('Service worker controller changed');
+          if (navigator.serviceWorker.controller) {
+            console.log('Sending version to new controller');
+            navigator.serviceWorker.controller.postMessage({
+              type: 'SET_VERSION',
+              version: version
+            });
+          }
+        });
+      }
+    </script>
   </head>
   <body>
     <div id="app"></div>
