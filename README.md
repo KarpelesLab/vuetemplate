@@ -10,25 +10,35 @@ A [Karpeles Lab Inc.](https://klb.jp/) base template for building websites with 
 - **Dev Environment** - Mimics production with FW variable injection and API proxying
 - **Version Management** - Service worker adds version headers for smart cache management
 
-## Getting Started
+## Start Checklist
 
-```sh
-# Clone the template
-git clone https://github.com/KarpelesLab/vuetemplate.git my-project
-cd my-project
+When creating a new project from this template:
 
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
-```
+- [ ] Clone the repository
+  ```sh
+  git clone https://github.com/KarpelesLab/vuetemplate.git my-project
+  cd my-project
+  ```
+- [ ] Change the git remote to your new project
+  ```sh
+  git remote set-url origin git@github.com:YourOrg/my-project.git
+  ```
+- [ ] Update `etc/registry_dev.ini` with your project's Realm ID
+  ```ini
+  Realm=usrr-xxxx-xxxx-xxxx-xxxx-xxxxxxxx
+  ```
+- [ ] Setup GitLab CI (copy `.gitlab-ci.yml` from an existing project or configure as needed)
+- [ ] Install dependencies and start developing
+  ```sh
+  npm install
+  npm run dev
+  ```
 
 ## Configuration
 
 ### Registry Files
 
-Create `etc/registry.ini` and `etc/registry_dev.ini` to configure your development environment:
+The `etc/registry.ini` and `etc/registry_dev.ini` files configure your environment:
 
 **etc/registry.ini** (common settings):
 ```ini
