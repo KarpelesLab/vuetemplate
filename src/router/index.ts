@@ -1,8 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { getPrefix } from '@karpeleslab/klbfw'
 import HomeView from '../views/HomeView.vue'
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history: createWebHistory(getPrefix() + '/'),
   routes: [
     {
       path: '/',
