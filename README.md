@@ -1,39 +1,103 @@
-# .
+# KLB Vue Template
 
-This template should help get you started developing with Vue 3 in Vite.
+A [Karpeles Lab Inc.](https://klb.jp/) base template for building websites with Vue 3, Vite, and [klbfw](https://github.com/KarpelesLab/klbfw).
 
-## Recommended IDE Setup
+## Features
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+- **Vue 3 + TypeScript** - Modern Vue development with full type support
+- **Vite** - Fast build tool with hot module replacement
+- **klbfw Integration** - Pre-configured [@karpeleslab/klbfw](https://github.com/KarpelesLab/klbfw) for API communication
+- **Dev Environment** - Mimics production with FW variable injection and API proxying
+- **Version Management** - Service worker adds version headers for smart cache management
 
-## Type Support for `.vue` Imports in TS
-
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
+## Getting Started
 
 ```sh
+# Clone the template
+git clone https://github.com/KarpelesLab/vuetemplate.git my-project
+cd my-project
+
+# Install dependencies
 npm install
-```
 
-### Compile and Hot-Reload for Development
-
-```sh
+# Start development server
 npm run dev
 ```
 
-### Type-Check, Compile and Minify for Production
+## Configuration
+
+### Registry Files
+
+Create `etc/registry.ini` and `etc/registry_dev.ini` to configure your development environment:
+
+**etc/registry.ini** (common settings):
+```ini
+Net_SSL_Force=1
+Currency_List=USD
+```
+
+**etc/registry_dev.ini** (dev overrides):
+```ini
+Realm=usrr-xxxx-xxxx-xxxx-xxxx-xxxxxxxx
+Net_SSL_Force=0
+```
+
+## Development
+
+The dev server (`npm run dev`) automatically:
+
+- **Injects FW variable** - Matches production behavior with context, locale, and CSRF token
+- **Proxies API requests** - Routes `/_rest/` and `/_special/rest/` to the backend
+- **Validates CSRF tokens** - Adds `Sec-Csrf-Token: valid` header when Authorization matches
+- **Parses URL prefixes** - Handles `/l/en-US/`, `/c/USD/` style prefixes for i18n
+
+## Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start development server |
+| `npm run build` | Type-check and build for production |
+| `npm run preview` | Preview production build locally |
+| `npm run type-check` | Run TypeScript type checking |
+| `npm run lint` | Lint and fix code (alias for lint:fix) |
+| `npm run lint:check` | Check for linting errors |
+| `npm run lint:fix` | Fix linting errors |
+
+## klbfw Usage
+
+```typescript
+import { rest, getPrefix, getLocale } from '@karpeleslab/klbfw'
+
+// Make API calls
+const result = await rest('User:get', 'GET')
+
+// Get URL prefix for i18n
+const prefix = getPrefix() // e.g., "/l/en-US"
+
+// Get current locale
+const locale = getLocale() // e.g., "en-US"
+```
+
+## Production Build
 
 ```sh
 npm run build
 ```
 
-### Lint with [ESLint](https://eslint.org/)
+The build process:
+1. Runs TypeScript type checking
+2. Compiles and minifies assets
+3. Injects git commit hash as version (`%GIT_VERSION%`)
+4. Copies service worker for version header injection
 
-```sh
-npm run lint
-```
+## IDE Setup
+
+[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (disable Vetur if installed).
+
+## Resources
+
+- [Karpeles Lab Inc.](https://klb.jp/)
+- [klbfw on GitHub](https://github.com/KarpelesLab/klbfw)
+- [This Template](https://github.com/KarpelesLab/vuetemplate)
+- [Vue.js Documentation](https://vuejs.org/)
+- [Vite Documentation](https://vite.dev/)
