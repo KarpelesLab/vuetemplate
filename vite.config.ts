@@ -4,8 +4,8 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
 import vueDevTools from 'vite-plugin-vue-devtools'
-import { versionInjector } from './src/plugins/version-injector'
-import { klbfwDev } from './src/plugins/klbfw-dev'
+import { versionInjector } from './plugins/version-injector'
+import { klbfwDev } from './plugins/klbfw-dev'
 
 // https://vite.dev/config/
 export default defineConfig({
