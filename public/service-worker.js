@@ -59,7 +59,7 @@ self.addEventListener('fetch', event => {
 });
 
 // Cache management
-self.addEventListener('install', event => {
+self.addEventListener('install', () => {
   self.skipWaiting();
 });
 
