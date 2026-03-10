@@ -16,6 +16,7 @@
   "dependencies": {
     "@karpeleslab/klbfw": "^0.2.23",
     "vue": "^3.5.13",
+    "vue-i18n": "^11.3.0",
     "vue-router": "^4.5.0"
   },
   "devDependencies": {

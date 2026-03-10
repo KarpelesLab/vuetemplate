@@ -9,6 +9,7 @@ A [Karpeles Lab Inc.](https://klb.jp/) base template for building websites with 
 - **klbfw Integration** - Pre-configured [@karpeleslab/klbfw](https://github.com/KarpelesLab/klbfw) for API communication
 - **Dev Environment** - Mimics production with FW variable injection and API proxying
 - **Version Management** - Service worker adds version headers for smart cache management
+- **i18n** - [vue-i18n](https://vue-i18n.intlify.dev/) with locale auto-detection via klbfw
 
 ## Start Checklist
 
@@ -27,6 +28,7 @@ When creating a new project from this template:
   ```ini
   Realm=usrr-xxxx-xxxx-xxxx-xxxx-xxxxxxxx
   ```
+- [ ] Update `etc/i18n/user_flow.csv` with your project-specific wording (customize messages, add languages)
 - [ ] Setup GitLab CI (copy `.gitlab-ci.yml` from an existing project or configure as needed)
 - [ ] Install dependencies and start developing
   ```sh
@@ -87,6 +89,62 @@ const prefix = getPrefix() // e.g., "/l/en-US"
 // Get current locale
 const locale = getLocale() // e.g., "en-US"
 ```
+
+## Internationalization (i18n)
+
+The template uses [vue-i18n](https://vue-i18n.intlify.dev/) for client-side translations, initialized with the locale returned by `getLocale()` from klbfw.
+
+### Client-side translations
+
+Translation files are JSON files stored in `src/locale/<lang>/`, organized by namespace:
+
+```
+src/locale/
+├── en-US/
+│   └── common.json
+└── fr-FR/
+    └── common.json
+```
+
+All JSON files are auto-loaded at build time via `import.meta.glob`. Each file becomes a namespace matching its filename. For example, `src/locale/en-US/common.json`:
+
+```json
+{
+  "hello": "Hello",
+  "welcome": "Welcome"
+}
+```
+
+Use translations in components with the `$t()` helper:
+
+```vue
+<template>
+  <p>{{ $t('common.hello') }}</p>
+</template>
+```
+
+Or with the Composition API:
+
+```vue
+<script setup lang="ts">
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
+</script>
+
+<template>
+  <p>{{ t('common.hello') }}</p>
+</template>
+```
+
+To add a new language, create a matching directory under `src/locale/` with the same JSON files.
+
+### Server-side translations
+
+The `etc/i18n/` directory contains translations for server-side messages (API responses). These use CSV and INI formats and are processed by the klbfw dev plugin. See existing files for format examples.
+
+### Language detection
+
+The active locale is determined by `getLocale()` from klbfw, which reads the `/l/<lang>/` URL prefix. The `Language:local` API returns the list of enabled languages, which can be used to build a language selector.
 
 ## Production Build
 
